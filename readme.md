@@ -2,7 +2,7 @@
 
 It is small javaScript library for connecting static div blocks(without animation) an arrows on Your web page.
 
-<img src="_path_to_my_loaded_img_heare_?raw=true" />
+<img src="https://github.com/Verhov/arrows_for_blocks/blob/master/screenshot.png?raw=true" />
 
 <a href="http://michael.verhov.com/Project/canvas_arrows_for_div">Examples and demo here.</a>
 
