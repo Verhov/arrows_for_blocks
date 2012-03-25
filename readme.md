@@ -24,10 +24,12 @@ Step2: (Initialize(once) and draw arrows)
 ### Parametrs:
 
 arrow_initialize( divid, newid);
+
 * divid: div block, for canvas initialize;
 * newid: new created canvas id;
 
 arrow(canvas, div1, div1side, div2, div2side, color, lineWidth, shadowColor, shadowBlur);
+
 * canvas: canvas id for draw arrow;
 * div1: new created canvas id;
 * div1side: arrow start-end position: 1-left, 2-top, 3-right, 4-bottom;
