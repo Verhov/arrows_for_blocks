@@ -20,6 +20,7 @@ Step2: (Initialize(once) and draw arrows)
           	arrow('my_new_canvas', 'div1', 4, 'div2', 2, 'black', 2, 'red', 4);
         </script>
 
+*for the correct work blocks must be "close relatives"
 
 ### Parametrs:
 
@@ -41,4 +42,5 @@ arrow(canvas, div1, div1side, div2, div2side, color, lineWidth, shadowColor, sha
 
 ### Bug's:
 
-canvas overlaps text block in some browsers (change "by hand" at the moment);
+* canvas overlaps text block in some browsers (change "by hand" at the moment);
+* slight displacement canvas block in Firefox;
