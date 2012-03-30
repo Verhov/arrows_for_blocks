@@ -20,7 +20,7 @@ Step2: (Initialize(once) and draw arrows)
           	arrow('my_new_canvas', 'div1', 4, 'div2', 2, 'black', 2, 'red', 4);
         </script>
 
-*for the correct work blocks must be "close relatives"
+* for the correct work blocks must be "close relatives"
 
 ### Parametrs:
 
