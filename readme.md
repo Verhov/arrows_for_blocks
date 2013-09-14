@@ -1,6 +1,6 @@
-# HTML5 canvas arrows for blocks (javaScript) (beta)
+# HTML5 canvas arrows for blocks (javaScript)
 
-It is small javaScript library for connecting static div blocks(without animation) an arrows on Your web page.
+It is small javaScript library for connecting static div blocks an arrows on Your web page.
 
 <img src="https://github.com/Verhov/arrows_for_blocks/blob/master/screenshot.png?raw=true" />
 
@@ -16,31 +16,11 @@ Step1: (Add lib.)
 Step2: (Initialize(once) and draw arrows)
 
         <script type='text/javascript'>
-          	arrow_initialize('parent_div', 'my_new_canvas');
-          	arrow('my_new_canvas', 'div1', 4, 'div2', 2, 'black', 2, 'red', 4);
+          	$cArrows('#commonParent').drawArrow('#fromDiv', '.toDiv');
         </script>
-
-* for the correct work blocks must be "close relatives"
 
 ### Parametrs:
 
-arrow_initialize( divid, newid);
+### More:
 
-* divid: div block, for canvas initialize;
-* newid: new created canvas id;
-
-arrow(canvas, div1, div1side, div2, div2side, color, lineWidth, shadowColor, shadowBlur);
-
-* canvas: canvas id for draw arrow;
-* div1: new created canvas id;
-* div1side: arrow start-end position: 1-left, 2-top, 3-right, 4-bottom;
-* color: arrow color in css format;
-* lineWidth: line width in pixels;
-* shadowColor: shadow color;
-* shadowBlur: shadow blur;
-
-
-### Bug's:
-
-* canvas overlaps text block in some browsers (change "by hand" at the moment);
-* slight displacement canvas block in Firefox;
+currently a project underway
