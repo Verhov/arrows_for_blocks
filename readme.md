@@ -16,7 +16,7 @@ Step1: (Add lib.)
 Step2: (Initialize(once) and draw arrows)
 
         <script type='text/javascript'>
-          	$cArrows('#commonParent').drawArrow('#fromDiv', '.toDiv');
+          	$cArrows('#commonParent').drawArrow('#fromDiv', '.toDiv').drawArrow('#fromDiv2', '.toDiv2');
         </script>
 
 ### Parametrs:
