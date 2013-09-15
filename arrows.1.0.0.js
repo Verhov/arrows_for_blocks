@@ -5,7 +5,6 @@
 
 (function (window, undefined) {
 
-    // initialization
     var $cArrows = function (commonParent, genrealOptions) {
 		if (window === this) {
 		    return new $cArrows(commonParent, genrealOptions);
@@ -28,7 +27,7 @@
 		};
 		this.ParentsAndCanvases = [[], [], []]; // - [0] - for common parents; [1] - for canvas; [2] - for drawn arrows [from, to, options]
 
-        // get parent nodes
+        // get common parent nodes
 		if (typeof commonParent === 'string') {
 		    var commonParentResult = document.querySelectorAll(commonParent);
 		}
@@ -60,6 +59,14 @@
 		    canvas.width = this.ParentsAndCanvases[0][iParent].scrollWidth;
 		    canvas.height = this.ParentsAndCanvases[0][iParent].scrollHeight;
 
+		    // set identifier, if necessary
+		    if (this.options['canvasId'] != undefined) {    // && commonParentResult.length === 1
+		        canvas.id = this.options['canvasId'];
+		    }
+		    if (this.options['canvasClass'] != undefined) {
+		        canvas.className = this.options['canvasClass'];
+		    }
+
 		    this.ParentsAndCanvases[0][iParent].insertBefore(canvas, this.ParentsAndCanvases[0][iParent].firstChild);
 		    this.ParentsAndCanvases[1].push(canvas);
 		}
@@ -70,7 +77,6 @@
     };
 
 
-    // private functions
     function extend(target, source) {
         if (target != null && source != null) {
             for (name in source) {
@@ -133,8 +139,6 @@
         draw_arrow(context, dot1.x, dot1.y, dot2.x, dot2.y);
     }
 
-
-    // global methods
     $cArrows.fn = $cArrows.prototype = {
         trowException: function (ex) {
             if (this.options.alertErrors === true)
