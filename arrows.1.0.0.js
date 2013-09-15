@@ -5,6 +5,10 @@
 
 (function (window, undefined) {
 
+<<<<<<< HEAD
+=======
+    // constructor
+>>>>>>> 648b02a8afd31d19ad645730320fc40fa2b162a9
     var $cArrows = function (commonParent, genrealOptions) {
 		if (window === this) {
 		    return new $cArrows(commonParent, genrealOptions);
