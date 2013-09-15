@@ -5,7 +5,7 @@
 
 (function (window, undefined) {
 
-    // initialization
+    // constructor
     var $cArrows = function (commonParent, genrealOptions) {
 		if (window === this) {
 		    return new $cArrows(commonParent, genrealOptions);
