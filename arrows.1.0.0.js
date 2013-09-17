@@ -5,10 +5,6 @@
 
 (function (window, undefined) {
 
-<<<<<<< HEAD
-=======
-    // constructor
->>>>>>> 648b02a8afd31d19ad645730320fc40fa2b162a9
     var $cArrows = function (commonParent, genrealOptions) {
 		if (window === this) {
 		    return new $cArrows(commonParent, genrealOptions);
@@ -90,29 +86,59 @@
             }
         }
         return target;
-    };
+    }
+    function getOffset(canvas, childrenEl) {
+        //var box = childrenEl.getBoundingClientRect()
+
+        // v1
+        /*
+        var parentEl = canvas.parentNode;
+
+        var top = 0, left = 0, width = childrenEl.offsetWidth, height = childrenEl.offsetHeight;
+        while (childrenEl !== parentEl) {
+            top = top + parseFloat(childrenEl.offsetTop)
+            left = left + parseFloat(childrenEl.offsetLeft)
+            childrenEl = childrenEl.parentNode;     // offsetParent
+        }
+        return { top: top, left: left, width: width, height: height };
+        */
+        //v2
+        //if (typeof elem.getBoundingClientRect !== undefined) {
+        var canv = canvas.getBoundingClientRect(),
+            box = childrenEl.getBoundingClientRect(),
+            top = 0, left = 0, width = childrenEl.offsetWidth, height = childrenEl.offsetHeight;
+
+        top = box.top - canv.top;
+        left = box.left - canv.left;
+        //return { top: Math.round(top), left: Math.round(left) }
+        return { top: top, left: left, width: width, height: height };
+
+    }
     function calccoord(canvas, div, side) {
         var x = 0; var y = 0;
+
+        var elBox = getOffset(canvas, div);
+
         switch (side) {
             case 1:
-                x = div.offsetLeft - canvas.offsetLeft;
-                y = div.offsetTop - canvas.offsetTop + (div.offsetHeight / 2);
+                x = elBox.left;
+                y = elBox.top + (elBox.height / 2);
                 break;
             case 2:
-                x = div.offsetLeft - canvas.offsetLeft + (div.offsetWidth / 2);
-                y = div.offsetTop - canvas.offsetTop;
+                x = elBox.left + (elBox.width / 2);
+                y = elBox.top;
                 break;
             case 3:
-                x = div.offsetLeft - canvas.offsetLeft + div.offsetWidth;
-                y = div.offsetTop - canvas.offsetTop + (div.offsetHeight / 2);
+                x = elBox.left + elBox.width;
+                y = elBox.top + (elBox.height / 2);
                 break;
             case 4:
-                x = div.offsetLeft - canvas.offsetLeft + (div.offsetWidth / 2);
-                y = div.offsetTop - canvas.offsetTop + div.offsetHeight;
+                x = elBox.left + (elBox.width / 2);
+                y = elBox.top + elBox.height;
                 break;
             default:    //4
-                x = div.offsetLeft - canvas.offsetLeft + (div.offsetWidth / 2);
-                y = div.offsetTop - canvas.offsetTop + div.offsetHeight;
+                x = elBox.left + (elBox.width / 2);
+                y = elBox.top + elBox.height;
                 break;
         }
         return { 'x': x, 'y': y }
@@ -139,7 +165,7 @@
             extend(context, cRenderOptions);
 
         var dot1 = calccoord(canvas, div1, 4);
-        var dot2 = calccoord(canvas, div2, 2);
+        var dot2 = calccoord(canvas, div2, 4);
         draw_arrow(context, dot1.x, dot1.y, dot2.x, dot2.y);
     }
 
