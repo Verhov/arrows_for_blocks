@@ -14,18 +14,20 @@
 		this.options = {
             canvasZIndex: -10,
 		    alertErrors: true,
-		    draw: [],
             putToContainer: true,
-		    renderOptions: {    //some options: shadowColor: 'rgba(0, 0, 0, 0)', shadowBlur: 0
-		        lineWidth: 2,
-		        lineJoin: 'round',
-		        strokeStyle: '#000000'
-		    },
-		    drawOptions: {
-                drawPositionFrom: ''
+            renderOptions: {
+                arrow: {
+                    connectionType: 'auto', // : [center,angle,auto(autoAngle),side]
+                    arrowType: 'arrow'      // : line(empty), arrow, bilateralArrow // fillArrow
+                },
+                render: {
+                    lineWidth: 2,
+                    strokeStyle: '#2D6CA2'
+                    // another options e.g.: shadowColor: 'rgba(0, 0, 0, 0)', shadowBlur: 0, lineJoin: 'round',
+                }
 		    }
 		};
-		this.ParentsAndCanvases = [[], [], []]; // - [0] - for common parents; [1] - for canvas; [2] - for drawn arrows [from, to, options]
+		this.ParentsAndCanvases = [[], [], []]; // stack for: [0] - for common parents; [1] - for canvas; [2] - for drawn arrows [from, to, options]
 
         // get common parent nodes
 		if (typeof commonParent === 'string') {
@@ -44,8 +46,12 @@
 		    this.trowException('common parent not found');
 
         // extend options
-		if (genrealOptions != undefined && genrealOptions != null)
-		    extend(this.options, genrealOptions);
+		if (genrealOptions !== undefined) {   //&& genrealOptions != null   //extend(this.options, genrealOptions);
+		    if (genrealOptions.render !== undefined)
+		        extend(this.options.renderOptions.render, genrealOptions.render);
+		    if (genrealOptions.arrow !== undefined)
+		        extend(this.options.renderOptions.arrow, genrealOptions.arrow);
+		}
 
         // set up canvas for each node
 		for (iParent in this.ParentsAndCanvases[0]) {
@@ -70,15 +76,13 @@
 		    this.ParentsAndCanvases[0][iParent].insertBefore(canvas, this.ParentsAndCanvases[0][iParent].firstChild);
 		    this.ParentsAndCanvases[1].push(canvas);
 		}
-        // draw if necessary
-		if (this.options.draw.length > 0) {
-		}
+
 		return this;
     };
 
 
     function extend(target, source) {
-        if (target != null && source != null) {
+        if (target != null && source != null) { //lot of check (performance?)
             for (name in source) {
                 if (source[name] !== undefined) {
                     target[name] = source[name];
@@ -88,66 +92,61 @@
         return target;
     }
     function getOffset(canvas, childrenEl) {
-        //var box = childrenEl.getBoundingClientRect()
-
-        // v1
-        /*
-        var parentEl = canvas.parentNode;
-
-        var top = 0, left = 0, width = childrenEl.offsetWidth, height = childrenEl.offsetHeight;
-        while (childrenEl !== parentEl) {
-            top = top + parseFloat(childrenEl.offsetTop)
-            left = left + parseFloat(childrenEl.offsetLeft)
-            childrenEl = childrenEl.parentNode;     // offsetParent
-        }
-        return { top: top, left: left, width: width, height: height };
-        */
-        //v2
-        //if (typeof elem.getBoundingClientRect !== undefined) {
         var canv = canvas.getBoundingClientRect(),
-            box = childrenEl.getBoundingClientRect(),
-            top = 0, left = 0, width = childrenEl.offsetWidth, height = childrenEl.offsetHeight;
+            box = childrenEl.getBoundingClientRect();
+            //top = box.top - canv.top, left = box.left - canv.left, width = childrenEl.offsetWidth, height = childrenEl.offsetHeight;
 
-        top = box.top - canv.top;
-        left = box.left - canv.left;
-        //return { top: Math.round(top), left: Math.round(left) }
-        return { top: top, left: left, width: width, height: height };
+            return {
+                top: box.top - canv.top,
+                left: box.left - canv.left,
+                width: childrenEl.offsetWidth,
+                height: childrenEl.offsetHeight
+            };
 
     }
-    function calccoord(canvas, div, side) {
-        var x = 0; var y = 0;
-
-        var elBox = getOffset(canvas, div);
+    function getSideCoord(coods, side) {
+        var x = 0, y = 0;
+        //var elBox = getOffset(canvas, div);
 
         switch (side) {
-            case 1:
-                x = elBox.left;
-                y = elBox.top + (elBox.height / 2);
+            
+            case 'top':
+                x = coods.left + (coods.width / 2);
+                y = coods.top;
                 break;
-            case 2:
-                x = elBox.left + (elBox.width / 2);
-                y = elBox.top;
+            case 'right':
+                x = coods.left + coods.width;
+                y = coods.top + (coods.height / 2);
                 break;
-            case 3:
-                x = elBox.left + elBox.width;
-                y = elBox.top + (elBox.height / 2);
+            case 'bottom':
+                x = coods.left + (coods.width / 2);
+                y = coods.top + coods.height;
                 break;
-            case 4:
-                x = elBox.left + (elBox.width / 2);
-                y = elBox.top + elBox.height;
+            case 'left':
+                x = coods.left;
+                y = coods.top + (coods.height / 2);
                 break;
-            default:    //4
-                x = elBox.left + (elBox.width / 2);
-                y = elBox.top + elBox.height;
+            default:    // bottom
+                x = coods.left + (coods.width / 2);
+                y = coods.top + coods.height;
                 break;
         }
-        return { 'x': x, 'y': y }
+        return { x: x, y: y }
     }
-    function draw_arrow(context, fromx, fromy, tox, toy) {
+    function getCenterCoord(coods) {
+        return {
+            x: coods.left + coods.width / 2,
+            y: coods.top + (coods.height / 2)
+        }
+    }
+    function getAngleCoord(coods, angle) {
+
+    }
+    function canvasDraw(context, fromx, fromy, tox, toy) {
         var headlen = 9;
-        var dx = tox - fromx;
-        var dy = toy - fromy;
-        var angle = Math.atan2(dy, dx);
+        //var dx = tox - fromx;
+        //var dy = toy - fromy;
+        var angle = Math.atan2(toy - fromy, tox - fromx);
         context.beginPath();
         context.moveTo(fromx, fromy);
         context.lineTo(tox, toy);
@@ -156,18 +155,45 @@
         context.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
         context.stroke();
     }
-    function arrow(canvas, div1, div2, gRenderOptions, cRenderOptions) {    //, color, lineWidth, shadowColor, shadowBlur , div1side, div2side
-        var context = canvas.getContext('2d');
-        if (gRenderOptions != undefined)
-            extend(context, gRenderOptions);
-        
-        if (cRenderOptions != undefined)
-            extend(context, cRenderOptions);
+    function drawArrow(canvas, div1, div2, gRenderOptions, cRenderOptions) {    //, color, lineWidth, shadowColor, shadowBlur , div1side, div2side
+        var context = canvas.getContext('2d'),
+            arrowOpt = gRenderOptions.arrow,
+            dot1 = getOffset(canvas, div1),//
+            dot2 = getOffset(canvas, div2);
 
-        var dot1 = calccoord(canvas, div1, 4);
-        var dot2 = calccoord(canvas, div2, 4);
-        draw_arrow(context, dot1.x, dot1.y, dot2.x, dot2.y);
+        // extend here with custom
+        extend(context, gRenderOptions.render);
+
+        if (cRenderOptions !== undefined) {
+            if (cRenderOptions.render !== undefined)
+                extend(context, cRenderOptions.render);
+            if (cRenderOptions.arrow !== undefined)
+                extend(arrowOpt, cRenderOptions.arrow);
+        }
+
+        // getAngle, getCenter
+        switch (arrowOpt.connectionType) {
+            case 'center':
+                dot1 = getCenterCoord(dot1);
+                dot2 = getCenterCoord(dot2);
+                break;
+            case 'auto':
+
+                break;
+            case 'angle':
+                dot1 = getAngleCoord(dot1, arrowOpt.angle);
+                dot2 = getAngleCoord(dot2, arrowOpt.angle);
+                break;
+            case 'side':
+                dot1 = getSideCoord(dot1, arrowOpt.connectionSide); // prfomance check getSideCoord !!!
+                dot2 = getSideCoord(dot2, arrowOpt.connectionSide);
+                break;
+            default: break;   // auto
+        }
+
+        canvasDraw(context, dot1.x, dot1.y, dot2.x, dot2.y);    // - сюда передать тип стрелки
     }
+
 
     $cArrows.fn = $cArrows.prototype = {
         trowException: function (ex) {
@@ -175,23 +201,23 @@
                 alert('CanvasArrows error: ' + ex);
             throw new Error(ex);
         },
-        drawArrow: function (from, to, customRenderOptions) {
+        arrow: function (from, to, cRenderOptions) {
             for (iParent in this.ParentsAndCanvases[0]) {
                 var fromChildrens = this.ParentsAndCanvases[0][iParent].querySelectorAll(from);
                 var toChildrens = this.ParentsAndCanvases[0][iParent].querySelectorAll(to);
                 for (var fi = 0; fi < fromChildrens.length; fi++) {
                     for (var ti = 0; ti < toChildrens.length; ti++) {
-                        arrow(this.ParentsAndCanvases[1][iParent], fromChildrens[fi], toChildrens[ti], this.options.renderOptions, customRenderOptions);
+                        drawArrow(this.ParentsAndCanvases[1][iParent], fromChildrens[fi], toChildrens[ti], this.options.renderOptions, cRenderOptions);
                     }
                     if (this.options.putToContainer === true)
-                        this.ParentsAndCanvases[2].push([from, to, customRenderOptions]);
+                        this.ParentsAndCanvases[2].push([from, to, cRenderOptions]);
                 }
             }
             return this;
         },
-        drawArrows: function (arrowsArr) {
+        arrows: function (arrowsArr) {
             for (var i = 0; i < arrowsArr.length; i++) {
-                this.drawArrow(arrowsArr[i][0], arrowsArr[i][1], arrowsArr[i][2]);
+                this.arrow(arrowsArr[i][0], arrowsArr[i][1], arrowsArr[i][2]);
             }
             return this;
         },
@@ -207,17 +233,20 @@
             var putToContainer = this.options.putToContainer;
             this.options.putToContainer = false;
             for (iArrow in this.ParentsAndCanvases[2]) {
-                this.drawArrow(this.ParentsAndCanvases[2][iArrow][0], this.ParentsAndCanvases[2][iArrow][1], this.ParentsAndCanvases[2][iArrow][2]);
+                this.arrow(this.ParentsAndCanvases[2][iArrow][0], this.ParentsAndCanvases[2][iArrow][1], this.ParentsAndCanvases[2][iArrow][2]);
             }
             this.options.putToContainer = putToContainer;
             return this;
         },
         redraw: function () {
-            this.clear().draw();
-            return this;
+            return this.clear().draw();
         },
         updateOptions: function (options) {
-            extend(this.options, options);
+            //extend(this.options, options);
+            if (options.render !== undefined)
+                extend(this.options.renderOptions.render, options.render);
+            if (options.arrow !== undefined)
+                extend(this.options.renderOptions.arrow, options.arrow);
             return this;
         }
 	};
