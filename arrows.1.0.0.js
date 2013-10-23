@@ -17,8 +17,9 @@
             putToContainer: true,
             renderOptions: {
                 arrow: {
-                    connectionType: 'auto', // : [center,angle,auto(autoAngle),side]
-                    arrowType: 'arrow'      // : line(empty), arrow, bilateralArrow // fillArrow
+                    connectionType: 'center', // : point, centerOffset [center,angle,auto(autoAngle),side]
+                    arrowType: 'arrow'        // : line(empty), arrow, bilateralArrow // fillArrow
+                    // side, angle
                 },
                 render: {
                     lineWidth: 2,
@@ -104,6 +105,12 @@
             };
 
     }
+    function DegToRad(deg){
+        return deg * (Math.PI / 180);
+    }
+    function RadToDeg(deg) {
+        return deg * (180 / Math.PI);
+    }
     function getSideCoord(coods, side) {
         var x = 0, y = 0;
         //var elBox = getOffset(canvas, div);
@@ -139,8 +146,37 @@
             y: coods.top + (coods.height / 2)
         }
     }
-    function getAngleCoord(coods, angle) {
+    function getAngleCoord(r, angle) {
+        var c = getCenterCoord(r), x, y,
+            rAngle = Math.acos(
+                Math.sqrt(Math.pow(r.left + r.width - c.x, 2)) /
+                Math.sqrt(Math.pow(r.left + r.width - c.x, 2) + Math.pow(r.top - c.y, 2))
+                );
 
+        document.getElementById('aaabbb').textContent = rAngle / 2 + ' ' + angle;
+
+        if (angle >= -rAngle && angle < rAngle) {
+            x = r.left + r.width;
+            y = c.y - Math.tan(angle) * (r.left + r.width - c.x);
+        } else
+            if (angle >= rAngle && angle < Math.PI-rAngle) {
+                x = c.x - ((r.top - c.y) / Math.tan(angle));
+                y = r.top;
+            } else
+                if (angle >= Math.PI - rAngle && angle < Math.PI + rAngle) {
+                    x = r.left;
+                    y = c.y + Math.tan(angle) * (r.left + r.width - c.x);
+                }
+
+        return {
+            x: x,
+            y: y
+            // top
+            //x: c.x - ((r.top - c.y) / Math.tan(angle)),
+            //y: r.top
+        };
+        //return { x: x, y: Math.tan(angle) * (x - center.x) + center.y }
+        //return { x: (y-c.y)/Math.tan(angle) + c.x , y: y }    //  (y - center.y + Math.tan(angle) * center.x) / Math.tan(angle)     //center.x + y * Math.cos(angle)
     }
     function canvasDraw(context, fromx, fromy, tox, toy) {
         var headlen = 9;
@@ -177,16 +213,24 @@
                 dot1 = getCenterCoord(dot1);
                 dot2 = getCenterCoord(dot2);
                 break;
-            case 'auto':
-
+                // circleAngle and circleAuto
+            case 'rectangleAngle':
+                //dot1 = getAngleCoord(dot1, arrowOpt.angleFrom);
+                dot1 = getCenterCoord(dot1);
+                dot2 = getAngleCoord(dot2, DegToRad(arrowOpt.angleTo));
                 break;
-            case 'angle':
-                dot1 = getAngleCoord(dot1, arrowOpt.angle);
-                dot2 = getAngleCoord(dot2, arrowOpt.angle);
+            case 'rectangleAuto':
+                var c1 = getCenterCoord(dot1),
+                    c2 = getCenterCoord(dot2);
+                var angle = Math.atan2(c2.y - c1.y, c2.x - c1.x) + Math.PI;
+                dot1 = getAngleCoord(dot1, angle);
+                //dot1 = getCenterCoord(dot1);
+                //dot2 = getCenterCoord(dot2);
+                dot2 = getAngleCoord(dot2, angle);
                 break;
             case 'side':
-                dot1 = getSideCoord(dot1, arrowOpt.connectionSide); // prfomance check getSideCoord !!!
-                dot2 = getSideCoord(dot2, arrowOpt.connectionSide);
+                dot1 = getSideCoord(dot1, arrowOpt.sideFrom); // prfomance check getSideCoord !!!
+                dot2 = getSideCoord(dot2, arrowOpt.sideTo);
                 break;
             default: break;   // auto
         }
