@@ -28,7 +28,7 @@
                 }
 		    }
 		};
-		this.ParentsAndCanvases = [[], [], []]; // stack for: [0] - for common parents; [1] - for canvas; [2] - for drawn arrows [from, to, options]
+		this.CanvasStorage = [[], [], []]; // stack for: [0] - for common parents; [1] - for canvas; [2] - for drawn arrows [from, to, options]
 
         // get common parent nodes
 		if (typeof commonParent === 'string') {
@@ -39,9 +39,9 @@
 
 		if (commonParentResult.length > 0) {
 		    for (var i = 0; i < commonParentResult.length; i++) {
-		        this.ParentsAndCanvases[0][i] = commonParentResult[i];
+		        this.CanvasStorage[0][i] = commonParentResult[i];
 		    }
-		    this.ParentsAndCanvases[0].length = commonParentResult.length;
+		    this.CanvasStorage[0].length = commonParentResult.length;
 		}
 		else
 		    this.trowException('common parent not found');
@@ -55,16 +55,16 @@
 		}
 
         // set up canvas for each node
-		for (iParent in this.ParentsAndCanvases[0]) {
-		    this.ParentsAndCanvases[0][iParent].style.position = 'relative';
+		for (iParent in this.CanvasStorage[0]) {
+		    this.CanvasStorage[0][iParent].style.position = 'relative';
 		    var canvas = document.createElement('canvas');
 		    canvas.innerHTML = "";
 		    canvas.style.position = 'absolute';
 		    canvas.style.left = '0px';
 		    canvas.style.top = '0px';
 		    canvas.style.zIndex = this.options.canvasZIndex;
-		    canvas.width = this.ParentsAndCanvases[0][iParent].scrollWidth;
-		    canvas.height = this.ParentsAndCanvases[0][iParent].scrollHeight;
+		    canvas.width = this.CanvasStorage[0][iParent].scrollWidth;
+		    canvas.height = this.CanvasStorage[0][iParent].scrollHeight;
 
 		    // set identifier, if necessary
 		    if (this.options['canvasId'] !== undefined) {    // && commonParentResult.length === 1
@@ -74,8 +74,8 @@
 		        canvas.className = this.options['canvasClass'];
 		    }
 
-		    this.ParentsAndCanvases[0][iParent].insertBefore(canvas, this.ParentsAndCanvases[0][iParent].firstChild);
-		    this.ParentsAndCanvases[1].push(canvas);
+		    this.CanvasStorage[0][iParent].insertBefore(canvas, this.CanvasStorage[0][iParent].firstChild);
+		    this.CanvasStorage[1].push(canvas);
 		}
 
 		return this;
@@ -83,7 +83,7 @@
 
 
     function extend(target, source) {
-        if (target != null && source != null) { // n: lot of check
+        if (target != null && source != null) {
             for (name in source) {
                 if (source[name] !== undefined) {
                     target[name] = source[name];
@@ -186,11 +186,12 @@
     }
     function drawArrow(canvas, div1, div2, gRenderOptions, cRenderOptions) {    //, color, lineWidth, shadowColor, shadowBlur , div1side, div2side
         var context = canvas.getContext('2d'),
-            arrowOpt = gRenderOptions.arrow,
-            dot1 = getOffset(canvas, div1),//
+            arrowOpt = {},
+            dot1 = getOffset(canvas, div1),
             dot2 = getOffset(canvas, div2);
 
         // extend here with custom
+        extend(arrowOpt, gRenderOptions.arrow);
         extend(context, gRenderOptions.render);
 
         if (cRenderOptions !== undefined) {
@@ -207,8 +208,8 @@
                 dot2 = getCenterCoord(dot2);
                 break;
             case 'rectangleAngle':
-                dot1 = getAngleCoord(dot1, arrowOpt.angleFrom);
-                dot2 = getAngleCoord(dot2, DegToRad(arrowOpt.angleTo));
+                dot1 = getAngleCoord(dot1, getCenterCoord(dot1), DegToRad(arrowOpt.angleFrom));
+                dot2 = getAngleCoord(dot2, getCenterCoord(dot2), DegToRad(arrowOpt.angleTo));
                 break;
             case 'rectangleAuto':
                 var c1 = getCenterCoord(dot1),
@@ -234,15 +235,15 @@
             throw new Error(ex);
         },
         arrow: function (from, to, cRenderOptions) {
-            for (iParent in this.ParentsAndCanvases[0]) {
-                var fromChildrens = this.ParentsAndCanvases[0][iParent].querySelectorAll(from);
-                var toChildrens = this.ParentsAndCanvases[0][iParent].querySelectorAll(to);
+            for (iParent in this.CanvasStorage[0]) {
+                var fromChildrens = this.CanvasStorage[0][iParent].querySelectorAll(from);
+                var toChildrens = this.CanvasStorage[0][iParent].querySelectorAll(to);
                 for (var fi = 0; fi < fromChildrens.length; fi++) {
                     for (var ti = 0; ti < toChildrens.length; ti++) {
-                        drawArrow(this.ParentsAndCanvases[1][iParent], fromChildrens[fi], toChildrens[ti], this.options.renderOptions, cRenderOptions);
+                        drawArrow(this.CanvasStorage[1][iParent], fromChildrens[fi], toChildrens[ti], this.options.renderOptions, cRenderOptions);
                     }
                     if (this.options.putToContainer === true)
-                        this.ParentsAndCanvases[2].push([from, to, cRenderOptions]);
+                        this.CanvasStorage[2].push([from, to, cRenderOptions]);
                 }
             }
             return this;
@@ -254,8 +255,8 @@
             return this;
         },
         clear: function () {
-            for (iCanvas in this.ParentsAndCanvases[1]) {
-                var canvas = this.ParentsAndCanvases[1][iCanvas];
+            for (iCanvas in this.CanvasStorage[1]) {
+                var canvas = this.CanvasStorage[1][iCanvas];
                 var context = canvas.getContext('2d');
                 context.clearRect(0, 0, canvas.width, canvas.height);
             }
@@ -264,8 +265,8 @@
         draw: function () {
             var putToContainer = this.options.putToContainer;
             this.options.putToContainer = false;
-            for (iArrow in this.ParentsAndCanvases[2]) {
-                this.arrow(this.ParentsAndCanvases[2][iArrow][0], this.ParentsAndCanvases[2][iArrow][1], this.ParentsAndCanvases[2][iArrow][2]);
+            for (iArrow in this.CanvasStorage[2]) {
+                this.arrow(this.CanvasStorage[2][iArrow][0], this.CanvasStorage[2][iArrow][1], this.CanvasStorage[2][iArrow][2]);
             }
             this.options.putToContainer = putToContainer;
             return this;
