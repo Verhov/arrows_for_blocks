@@ -10,25 +10,26 @@
 		    return new $cArrows(commonParent, genrealOptions);
 		}
 
-        // default options, lazy = false
+        // default options
 		this.options = {
-            canvasZIndex: -10,
-		    alertErrors: true,
-            putToContainer: true,
-            renderOptions: {
-                arrow: {
-                    connectionType: 'rectangleAuto', // : point, centerOffset [center,angle,auto(autoAngle),side]
-                    arrowType: 'arrow'               // : line(empty), arrow, bilateralArrow // fillArrow
-                    // side, angle
-                },
-                render: {
-                    lineWidth: 2,
-                    strokeStyle: '#2D6CA2'
-                    // another options e.g.: shadowColor: 'rgba(0, 0, 0, 0)', shadowBlur: 0, lineJoin: 'round',
-                }
-		    }
+		    base: {
+		        canvasZIndex: -10,
+		        alertErrors: true,
+		        putToContainer: true
+		        // + : canvasClass, canvasId    n.r.: ~lazy = false
+                // n.r.: redraw-recreate then rescale
+		    },
+            arrow: {
+                connectionType: 'rectangleAuto', // : [rectangleAuto,center,ellipseAuto,side,rectangleAngle,ellipseAngle]  n.r.: ~point, ~centerOffset
+                arrowType: 'arrow'               // : [arrow,line,] n.r.: ~line(or empty), ~bilateralArrow, ~fillArrow
+            },
+            render: {
+                lineWidth: 2,
+                strokeStyle: '#2D6CA2'
+                // + : another canvas options e.g.: shadowColor: 'rgba(0, 0, 0, 0)', shadowBlur: 0, lineJoin: 'round',
+            }
 		};
-		this.CanvasStorage = [[], [], []]; // stack for: [0] - for common parents; [1] - for canvas; [2] - for drawn arrows [from, to, options]
+		this.CanvasStorage = [[], [], []]; // stack for: [0] - for common nodes; [1] - for canvas; [2] - for drawn arrows [from, to, options]
 
         // get common parent nodes
 		if (typeof commonParent === 'string') {
@@ -48,10 +49,12 @@
 
         // extend options
 		if (genrealOptions !== undefined) {
+		    if (genrealOptions.base !== undefined)
+		        extend(this.options.base, genrealOptions.base);
 		    if (genrealOptions.render !== undefined)
-		        extend(this.options.renderOptions.render, genrealOptions.render);
+		        extend(this.options.render, genrealOptions.render);
 		    if (genrealOptions.arrow !== undefined)
-		        extend(this.options.renderOptions.arrow, genrealOptions.arrow);
+		        extend(this.options.arrow, genrealOptions.arrow);
 		}
 
         // set up canvas for each node
@@ -62,7 +65,7 @@
 		    canvas.style.position = 'absolute';
 		    canvas.style.left = '0px';
 		    canvas.style.top = '0px';
-		    canvas.style.zIndex = this.options.canvasZIndex;
+		    canvas.style.zIndex = this.options.base.canvasZIndex;
 		    canvas.width = this.CanvasStorage[0][iParent].scrollWidth;
 		    canvas.height = this.CanvasStorage[0][iParent].scrollHeight;
 
@@ -177,18 +180,26 @@
             y: c.y + (r.height / 2) * Math.sin(angle)
         };
     }
-    function canvasDraw(context, fromx, fromy, tox, toy) {
+    function canvasDraw(context, p1, p2, arrowType) { //fromx, fromy, tox, toy
         var headlen = 9;
-        var angle = Math.atan2(toy - fromy, tox - fromx);
+        var angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
         context.beginPath();
-        context.moveTo(fromx, fromy);
-        context.lineTo(tox, toy);
-        context.moveTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
-        context.lineTo(tox, toy);
-        context.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+        context.moveTo(p1.x, p1.y);
+        context.lineTo(p2.x, p2.y);
+
+        switch (arrowType) {
+            case 'arrow':
+                context.moveTo(p2.x - headlen * Math.cos(angle - Math.PI / 6), p2.y - headlen * Math.sin(angle - Math.PI / 6));
+                context.lineTo(p2.x, p2.y);
+                context.lineTo(p2.x - headlen * Math.cos(angle + Math.PI / 6), p2.y - headlen * Math.sin(angle + Math.PI / 6));
+                break;
+            default:
+                break;
+        }
+        
         context.stroke();
     }
-    function drawArrow(canvas, div1, div2, gRenderOptions, cRenderOptions) {    //, color, lineWidth, shadowColor, shadowBlur , div1side, div2side
+    function drawArrow(canvas, div1, div2, gRenderOptions, customOptions) {    //, color, lineWidth, shadowColor, shadowBlur , div1side, div2side
         var context = canvas.getContext('2d'),
             arrowOpt = {},
             dot1 = getOffset(canvas, div1),
@@ -198,11 +209,11 @@
         extend(arrowOpt, gRenderOptions.arrow);
         extend(context, gRenderOptions.render);
 
-        if (cRenderOptions !== undefined) {
-            if (cRenderOptions.render !== undefined)
-                extend(context, cRenderOptions.render);
-            if (cRenderOptions.arrow !== undefined)
-                extend(arrowOpt, cRenderOptions.arrow);
+        if (customOptions !== undefined) {
+            if (customOptions.render !== undefined)
+                extend(context, customOptions.render);
+            if (customOptions.arrow !== undefined)
+                extend(arrowOpt, customOptions.arrow);
         }
 
         switch (arrowOpt.connectionType) {
@@ -237,26 +248,26 @@
             default: break;
         }
 
-        canvasDraw(context, dot1.x, dot1.y, dot2.x, dot2.y);    // - put type of arrow here
+        canvasDraw(context, dot1, dot2, arrowOpt.arrowType);    // - put type of arrow here
     }
 
 
     $cArrows.fn = $cArrows.prototype = {
         trowException: function (ex) {
-            if (this.options.alertErrors === true)
+            if (this.options.base.alertErrors === true)
                 alert('CanvasArrows error: ' + ex);
             throw new Error(ex);
         },
-        arrow: function (from, to, cRenderOptions) {
+        arrow: function (from, to, customOptions) {
             for (iParent in this.CanvasStorage[0]) {
                 var fromChildrens = this.CanvasStorage[0][iParent].querySelectorAll(from);
                 var toChildrens = this.CanvasStorage[0][iParent].querySelectorAll(to);
                 for (var fi = 0; fi < fromChildrens.length; fi++) {
                     for (var ti = 0; ti < toChildrens.length; ti++) {
-                        drawArrow(this.CanvasStorage[1][iParent], fromChildrens[fi], toChildrens[ti], this.options.renderOptions, cRenderOptions);
+                        drawArrow(this.CanvasStorage[1][iParent], fromChildrens[fi], toChildrens[ti], this.options, customOptions);
                     }
-                    if (this.options.putToContainer === true)
-                        this.CanvasStorage[2].push([from, to, cRenderOptions]);
+                    if (this.options.base.putToContainer === true)
+                        this.CanvasStorage[2].push([from, to, customOptions]);
                 }
             }
             return this;
@@ -276,22 +287,24 @@
             return this;
         },
         draw: function () {
-            var putToContainer = this.options.putToContainer;
-            this.options.putToContainer = false;
+            var putToContainer = this.options.base.putToContainer;
+            this.options.base.putToContainer = false;
             for (iArrow in this.CanvasStorage[2]) {
                 this.arrow(this.CanvasStorage[2][iArrow][0], this.CanvasStorage[2][iArrow][1], this.CanvasStorage[2][iArrow][2]);
             }
-            this.options.putToContainer = putToContainer;
+            this.options.base.putToContainer = putToContainer;
             return this;
         },
         redraw: function () {
             return this.clear().draw();
         },
         updateOptions: function (options) {
+            if (options.base !== undefined)
+                extend(this.options.base, options.base);
             if (options.render !== undefined)
-                extend(this.options.renderOptions.render, options.render);
+                extend(this.options.render, options.render);
             if (options.arrow !== undefined)
-                extend(this.options.renderOptions.arrow, options.arrow);
+                extend(this.options.arrow, options.arrow);
             return this;
         }
 	};
