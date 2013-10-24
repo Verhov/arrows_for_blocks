@@ -4,7 +4,7 @@ It is small javaScript library for connecting static div blocks an arrows on web
 
 <img src="https://github.com/Verhov/arrows_for_blocks/blob/master/screenshot.png?raw=true" />
 
-<a href="http://michael.verhov.com/Project/canvas_arrows_for_div">Examples and demo here.</a>
+~~<a href="http://michael.verhov.com/Project/canvas_arrows_for_div">Examples and demo here.</a>~~
 
 
 ## How to use:
@@ -37,3 +37,5 @@ Step2: (Initialize(once) and draw arrows)
               
               cArrow2.arrow('.block3', '.block2', { arrow: { connectionType: 'ellipseAngle', arrowSize: 4 } }); // drawing more other arrows
         </script>
+
+### License: GNU GPL
