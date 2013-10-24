@@ -171,10 +171,14 @@
             y: y
         };
     }
+    function getEllipseCoord(r, c, angle) {
+        return {
+            x: c.x + (r.width / 2) * Math.cos(angle),
+            y: c.y + (r.height / 2) * Math.sin(angle)
+        };
+    }
     function canvasDraw(context, fromx, fromy, tox, toy) {
         var headlen = 9;
-        // dx = tox - fromx;
-        // dy = toy - fromy;
         var angle = Math.atan2(toy - fromy, tox - fromx);
         context.beginPath();
         context.moveTo(fromx, fromy);
@@ -201,30 +205,39 @@
                 extend(arrowOpt, cRenderOptions.arrow);
         }
 
-        // circleAngle and circleAuto
         switch (arrowOpt.connectionType) {
-            case 'center':
-                dot1 = getCenterCoord(dot1);
-                dot2 = getCenterCoord(dot2);
-                break;
-            case 'rectangleAngle':
-                dot1 = getAngleCoord(dot1, getCenterCoord(dot1), DegToRad(arrowOpt.angleFrom));
-                dot2 = getAngleCoord(dot2, getCenterCoord(dot2), DegToRad(arrowOpt.angleTo));
-                break;
             case 'rectangleAuto':
                 var c1 = getCenterCoord(dot1),
                     c2 = getCenterCoord(dot2);
                 dot1 = getAngleCoord(dot1, c1, Math.atan2(c1.y - c2.y, c1.x - c2.x) + Math.PI);
                 dot2 = getAngleCoord(dot2, c2, Math.atan2(c2.y - c1.y, c2.x - c1.x) + Math.PI);
                 break;
+            case 'center':
+                dot1 = getCenterCoord(dot1);
+                dot2 = getCenterCoord(dot2);
+                break;
+            case 'ellipseAuto':
+                var c1 = getCenterCoord(dot1),
+                    c2 = getCenterCoord(dot2);
+                dot1 = getEllipseCoord(dot1, c1, Math.atan2(c2.y - c1.y, c2.x - c1.x));
+                dot2 = getEllipseCoord(dot2, c2, Math.atan2(c1.y - c2.y, c1.x - c2.x));
+                break;
             case 'side':
                 dot1 = getSideCoord(dot1, arrowOpt.sideFrom);
                 dot2 = getSideCoord(dot2, arrowOpt.sideTo);
                 break;
-            default: break;   // auto
+            case 'rectangleAngle':
+                dot1 = getAngleCoord(dot1, getCenterCoord(dot1), DegToRad(arrowOpt.angleFrom));
+                dot2 = getAngleCoord(dot2, getCenterCoord(dot2), DegToRad(arrowOpt.angleTo));
+                break;
+            case 'ellipseAngle':
+                dot1 = getEllipseCoord(dot1, getCenterCoord(dot1), DegToRad(arrowOpt.angleFrom));
+                dot2 = getEllipseCoord(dot2, getCenterCoord(dot2), DegToRad(arrowOpt.angleTo));
+                break;
+            default: break;
         }
 
-        canvasDraw(context, dot1.x, dot1.y, dot2.x, dot2.y);    // - сюда передать тип стрелки
+        canvasDraw(context, dot1.x, dot1.y, dot2.x, dot2.y);    // - put type of arrow here
     }
 
 
