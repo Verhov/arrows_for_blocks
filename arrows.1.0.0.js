@@ -21,7 +21,8 @@
 		    },
             arrow: {
                 connectionType: 'rectangleAuto', // : [rectangleAuto,center,ellipseAuto,side,rectangleAngle,ellipseAngle]  n.r.: ~point, ~centerOffset
-                arrowType: 'arrow'               // : [arrow,line,] n.r.: ~line(or empty), ~bilateralArrow, ~fillArrow
+                arrowType: 'arrow',              // : [arrow,line,] n.r.: ~line(or empty), ~bilateralArrow, ~fillArrow
+                arrowSize: 9
             },
             render: {
                 lineWidth: 2,
@@ -180,18 +181,32 @@
             y: c.y + (r.height / 2) * Math.sin(angle)
         };
     }
-    function canvasDraw(context, p1, p2, arrowType) { //fromx, fromy, tox, toy
-        var headlen = 9;
+    function canvasDraw(context, p1, p2, otp) { //fromx, fromy, tox, toy
+        var headlen = otp.arrowSize;
         var angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
         context.beginPath();
         context.moveTo(p1.x, p1.y);
         context.lineTo(p2.x, p2.y);
 
-        switch (arrowType) {
+        switch (otp.arrowType) {
             case 'arrow':
                 context.moveTo(p2.x - headlen * Math.cos(angle - Math.PI / 6), p2.y - headlen * Math.sin(angle - Math.PI / 6));
                 context.lineTo(p2.x, p2.y);
                 context.lineTo(p2.x - headlen * Math.cos(angle + Math.PI / 6), p2.y - headlen * Math.sin(angle + Math.PI / 6));
+                break;
+            case 'line':
+                // line already exist
+                break;
+            case 'double-headed':
+                // start
+                context.moveTo(p1.x + headlen * Math.cos(angle - Math.PI / 6), p1.y + headlen * Math.sin(angle - Math.PI / 6));
+                context.lineTo(p1.x, p1.y);
+                context.lineTo(p1.x + headlen * Math.cos(angle + Math.PI / 6), p1.y + headlen * Math.sin(angle + Math.PI / 6));
+                // end
+                context.moveTo(p2.x - headlen * Math.cos(angle - Math.PI / 6), p2.y - headlen * Math.sin(angle - Math.PI / 6));
+                context.lineTo(p2.x, p2.y);
+                context.lineTo(p2.x - headlen * Math.cos(angle + Math.PI / 6), p2.y - headlen * Math.sin(angle + Math.PI / 6));
+
                 break;
             default:
                 break;
@@ -248,7 +263,7 @@
             default: break;
         }
 
-        canvasDraw(context, dot1, dot2, arrowOpt.arrowType);    // - put type of arrow here
+        canvasDraw(context, dot1, dot2, arrowOpt);    // - put type of arrow here
     }
 
 
