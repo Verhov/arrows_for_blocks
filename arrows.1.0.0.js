@@ -17,8 +17,8 @@
             putToContainer: true,
             renderOptions: {
                 arrow: {
-                    connectionType: 'center', // : point, centerOffset [center,angle,auto(autoAngle),side]
-                    arrowType: 'arrow'        // : line(empty), arrow, bilateralArrow // fillArrow
+                    connectionType: 'rectangleAuto', // : point, centerOffset [center,angle,auto(autoAngle),side]
+                    arrowType: 'arrow'               // : line(empty), arrow, bilateralArrow // fillArrow
                     // side, angle
                 },
                 render: {
@@ -47,7 +47,7 @@
 		    this.trowException('common parent not found');
 
         // extend options
-		if (genrealOptions !== undefined) {   //&& genrealOptions != null   //extend(this.options, genrealOptions);
+		if (genrealOptions !== undefined) {
 		    if (genrealOptions.render !== undefined)
 		        extend(this.options.renderOptions.render, genrealOptions.render);
 		    if (genrealOptions.arrow !== undefined)
@@ -67,10 +67,10 @@
 		    canvas.height = this.ParentsAndCanvases[0][iParent].scrollHeight;
 
 		    // set identifier, if necessary
-		    if (this.options['canvasId'] != undefined) {    // && commonParentResult.length === 1
+		    if (this.options['canvasId'] !== undefined) {    // && commonParentResult.length === 1
 		        canvas.id = this.options['canvasId'];
 		    }
-		    if (this.options['canvasClass'] != undefined) {
+		    if (this.options['canvasClass'] !== undefined) {
 		        canvas.className = this.options['canvasClass'];
 		    }
 
@@ -83,7 +83,7 @@
 
 
     function extend(target, source) {
-        if (target != null && source != null) { //lot of check (performance?)
+        if (target != null && source != null) { // n: lot of check
             for (name in source) {
                 if (source[name] !== undefined) {
                     target[name] = source[name];
@@ -95,7 +95,6 @@
     function getOffset(canvas, childrenEl) {
         var canv = canvas.getBoundingClientRect(),
             box = childrenEl.getBoundingClientRect();
-            //top = box.top - canv.top, left = box.left - canv.left, width = childrenEl.offsetWidth, height = childrenEl.offsetHeight;
 
             return {
                 top: box.top - canv.top,
@@ -103,7 +102,6 @@
                 width: childrenEl.offsetWidth,
                 height: childrenEl.offsetHeight
             };
-
     }
     function DegToRad(deg){
         return deg * (Math.PI / 180);
@@ -113,10 +111,8 @@
     }
     function getSideCoord(coods, side) {
         var x = 0, y = 0;
-        //var elBox = getOffset(canvas, div);
 
         switch (side) {
-            
             case 'top':
                 x = coods.left + (coods.width / 2);
                 y = coods.top;
@@ -133,7 +129,7 @@
                 x = coods.left;
                 y = coods.top + (coods.height / 2);
                 break;
-            default:    // bottom
+            default:    // def: bottom
                 x = coods.left + (coods.width / 2);
                 y = coods.top + coods.height;
                 break;
@@ -146,42 +142,39 @@
             y: coods.top + (coods.height / 2)
         }
     }
-    function getAngleCoord(r, angle) {
-        var c = getCenterCoord(r), x, y,
+    function getAngleCoord(r, c, angle) {
+        var x, y,
             rAngle = Math.acos(
                 Math.sqrt(Math.pow(r.left + r.width - c.x, 2)) /
                 Math.sqrt(Math.pow(r.left + r.width - c.x, 2) + Math.pow(r.top - c.y, 2))
                 );
 
-        document.getElementById('aaabbb').textContent = rAngle / 2 + ' ' + angle;
-
-        if (angle >= -rAngle && angle < rAngle) {
+        if (angle >= 2 * Math.PI - rAngle || angle < rAngle) {
             x = r.left + r.width;
-            y = c.y - Math.tan(angle) * (r.left + r.width - c.x);
+            y = c.y + Math.tan(angle) * (r.left + r.width - c.x);
         } else
-            if (angle >= rAngle && angle < Math.PI-rAngle) {
+            if (angle >= rAngle && angle < Math.PI- rAngle) {
                 x = c.x - ((r.top - c.y) / Math.tan(angle));
-                y = r.top;
+                y = r.top + r.height;
             } else
                 if (angle >= Math.PI - rAngle && angle < Math.PI + rAngle) {
                     x = r.left;
-                    y = c.y + Math.tan(angle) * (r.left + r.width - c.x);
+                    y = c.y - Math.tan(angle) * (r.left + r.width - c.x);
                 }
-
+                else
+                    if (angle >= Math.PI + rAngle) {
+                        x = c.x + ((r.top - c.y) / Math.tan(angle));
+                        y = r.top;
+                    }
         return {
             x: x,
             y: y
-            // top
-            //x: c.x - ((r.top - c.y) / Math.tan(angle)),
-            //y: r.top
         };
-        //return { x: x, y: Math.tan(angle) * (x - center.x) + center.y }
-        //return { x: (y-c.y)/Math.tan(angle) + c.x , y: y }    //  (y - center.y + Math.tan(angle) * center.x) / Math.tan(angle)     //center.x + y * Math.cos(angle)
     }
     function canvasDraw(context, fromx, fromy, tox, toy) {
         var headlen = 9;
-        //var dx = tox - fromx;
-        //var dy = toy - fromy;
+        // dx = tox - fromx;
+        // dy = toy - fromy;
         var angle = Math.atan2(toy - fromy, tox - fromx);
         context.beginPath();
         context.moveTo(fromx, fromy);
@@ -207,29 +200,24 @@
                 extend(arrowOpt, cRenderOptions.arrow);
         }
 
-        // getAngle, getCenter
+        // circleAngle and circleAuto
         switch (arrowOpt.connectionType) {
             case 'center':
                 dot1 = getCenterCoord(dot1);
                 dot2 = getCenterCoord(dot2);
                 break;
-                // circleAngle and circleAuto
             case 'rectangleAngle':
-                //dot1 = getAngleCoord(dot1, arrowOpt.angleFrom);
-                dot1 = getCenterCoord(dot1);
+                dot1 = getAngleCoord(dot1, arrowOpt.angleFrom);
                 dot2 = getAngleCoord(dot2, DegToRad(arrowOpt.angleTo));
                 break;
             case 'rectangleAuto':
                 var c1 = getCenterCoord(dot1),
                     c2 = getCenterCoord(dot2);
-                var angle = Math.atan2(c2.y - c1.y, c2.x - c1.x) + Math.PI;
-                dot1 = getAngleCoord(dot1, angle);
-                //dot1 = getCenterCoord(dot1);
-                //dot2 = getCenterCoord(dot2);
-                dot2 = getAngleCoord(dot2, angle);
+                dot1 = getAngleCoord(dot1, c1, Math.atan2(c1.y - c2.y, c1.x - c2.x) + Math.PI);
+                dot2 = getAngleCoord(dot2, c2, Math.atan2(c2.y - c1.y, c2.x - c1.x) + Math.PI);
                 break;
             case 'side':
-                dot1 = getSideCoord(dot1, arrowOpt.sideFrom); // prfomance check getSideCoord !!!
+                dot1 = getSideCoord(dot1, arrowOpt.sideFrom);
                 dot2 = getSideCoord(dot2, arrowOpt.sideTo);
                 break;
             default: break;   // auto
@@ -286,7 +274,6 @@
             return this.clear().draw();
         },
         updateOptions: function (options) {
-            //extend(this.options, options);
             if (options.render !== undefined)
                 extend(this.options.renderOptions.render, options.render);
             if (options.arrow !== undefined)
