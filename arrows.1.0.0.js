@@ -1,6 +1,6 @@
 ﻿
 /*********************************************************************************************************************
-	JavaScript | canvas arrows v.1.0 | updated: 14.09.2013 (257) | author: michael verhov | http://michael.verhov.com | License: GNU GPL
+	JavaScript | canvas arrows v.1.0 | updated: 25.10.2013 | author: michael verhov | http://michael.verhov.com | License: GNU GPL
 **********************************************************************************************************************/
 
 (function (window, undefined) {
