@@ -6,6 +6,8 @@ It is small javaScript library for connecting static div blocks an arrows on web
 
 <a href="http://michael.verhov.com/en/post/canvas_arrows_for_div">Documentation, examples and demos.</a>
 
+Jsfiddle example: https://jsfiddle.net/verhov/k5Lh6qcr/
+
 
 ## How to use:
 
@@ -22,7 +24,7 @@ Step2: (Initialize(once) and draw arrows)
 ### Methods:
 
 * arrow(from, to, options)	- from(string), to(string), options(object - optional)
-* arrows(arrowsArray)		- arrowsArray(array[])
+* arrows(arrowsArray)		- arrowsArray(array)
 * clear()
 * draw()
 * redraw()
